@@ -69,9 +69,9 @@ void scanAndDisplayMatchingTuples(Query q)
                 Tuple t = getTupleFromPage(q->rel, p, q->curtup);
                 if (tupleMatch(q->rel, q->qstring, t)){
                     showTuple(q->rel, t);
+                    count++;
                 }
                 q->ntuples ++;
-                count++;
             }
             q->ntuppages ++;
             if (!count) {

@@ -12,7 +12,7 @@
 
 // calculate corresponding PID
 PageID calPid(Reln r, Count nsigs){
-    return nsigs/ (PAGESIZE/tupSize(r));
+    return nsigs/ maxTupsPP(r);
 }
 
 // make a tuple signature for SIMC
@@ -60,7 +60,7 @@ Bits makeTupleSig(Reln r, Tuple t) {
             int first = u+ tsigBits(r) % nAttrs(r);
             int k = (u / 2) ? (u / 2) : 1;
             for (int i = 0; i < nAttrs(r); ++i) {
-                if (strcmp(attr[i],"?") || strcmp(attr[i],"\0")) // ignore the ? attr
+                if (attr[i][0] == '?' || attr[i][0] == '\0') // ignore the ? attr
                     continue;
                 if (i == 0)
                     temp = codeword_c(attr[i], tsigBits(r), first, k);
@@ -75,15 +75,14 @@ Bits makeTupleSig(Reln r, Tuple t) {
         case 's': // SIMC
             cw = newBits(tsigBits(r));
             for (int i = 0; i < nAttrs(r); ++i) {
-                if (strcmp(attr[i],"?") || strcmp(attr[i],"\0")) // ignore the ? attr
+                if (attr[i][0] == '?' || attr[i][0] == '\0') // ignore the ? attr
                     continue;
                 temp = codeword(attr[i], tsigBits(r),codeBits(r));
                 orBits(cw, temp);
                 freeBits(temp); // release memory
             }
             break;
-        default:
-            break;
+        default:break;
     }
     freeVals(attr, nAttrs(r));
     return cw;

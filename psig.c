@@ -56,7 +56,7 @@ Bits makePageSig(Reln r, Tuple t) {
             // use floor unless it's 0
             int k = (u / 2 / maxTupsPP(r)) ? (u / 2 / maxTupsPP(r)) : 1;
             for (int i = 0; i < nAttrs(r); ++i) {
-                if (strcmp(attr[i], "?") || strcmp(attr[i], "\0")) // ignore the ? attr
+                if (attr[i][0] == '?' || attr[i][0] == '\0') // ignore the ? attr
                     continue;
                 if (i == 0)
                     temp = codeword1_c(attr[i], psigBits(r), first, k);
@@ -71,9 +71,9 @@ Bits makePageSig(Reln r, Tuple t) {
         case 's': // SIMC
             cw = newBits(psigBits(r));
             for (int i = 0; i < nAttrs(r); ++i) {
-                if (strcmp(attr[i], "?") || strcmp(attr[i], "\0")) // ignore the ? attr
+                if (attr[i][0] == '?' || attr[i][0] == '\0') // ignore the ? attr
                     continue;
-                temp = codeword1(attr[i], psigBits(r), codeBits(r));
+                temp = codeword1(attr[i], psigBits(r),codeBits(r));
                 orBits(cw, temp);
                 freeBits(temp); // release memory
             }
@@ -107,5 +107,8 @@ void findPagesUsingPageSigs(Query q) {
         q->nsigpages++;
         free(p);
     }
+    printf("Matched Pages:");
+    showBits(q->pages);
+    putchar('\n');
 }
 

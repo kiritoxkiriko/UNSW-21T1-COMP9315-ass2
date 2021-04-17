@@ -168,7 +168,6 @@ PageID addToRelation(Reln r, Tuple t) {
     addTupleToPage(r, p, t);
     rp->ntups++;  //written to disk in closeRelation()
     putPage(r->dataf, pid, p);
-    free(p); // release memory
 
     // compute tuple signature and add to tsigf
 
@@ -195,7 +194,6 @@ PageID addToRelation(Reln r, Tuple t) {
     putPage(r->tsigf, tsigPid, p);
     // release memory
     freeBits(tsig);
-    free(p);
 
     // compute page signature and add to psigf
 
@@ -222,21 +220,19 @@ PageID addToRelation(Reln r, Tuple t) {
         addOneItem(p);
         rp->npsigs++;  //written to disk in closeRelation()
         putPage(r->psigf, psigPid, p);
-    } else{ // if not add new page, then OR original psig
+    } else{ // if not add new page, then update original psig
         // find pid and offset in page
-        psigPid = pid / rp->psigPP;
-        offset = pid % rp->psigPP;
+        psigPid = (rp->npages - 1) / rp->psigPP;
+        offset = (rp->npages - 1) % rp->psigPP;
+        p = getPage(r->psigf, psigPid);
+        temp = newBits(psigBits(r));
         getBits(p, (psigBits(r) / 8) * offset, temp);
-        orBits(temp, tsig);
+        orBits(temp, psig);
         putBits(p, (psigBits(r) / 8) * offset, temp);
-        addOneItem(p);
-        rp->npsigs++;  //written to disk in closeRelation()
         putPage(r->psigf, psigPid, p);
         freeBits(temp);
     }
-
-    freeBits(tsig);
-    free(p);
+    freeBits(psig);
 
     // use page signature to update bit-slices
 
