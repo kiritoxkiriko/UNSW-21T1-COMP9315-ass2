@@ -77,6 +77,7 @@ void scanAndDisplayMatchingTuples(Query q)
             if (!count) {
                 q->nfalse++;
             }
+            free(p);
         }
     }
 }

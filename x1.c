@@ -36,9 +36,7 @@ int main(int argc, char **argv)
     showBits(b1);printf("\n");
     shiftBits(b1, 63);
     showBits(b1);printf("\n");
-    shiftBits(b1, 1);
-    showBits(b1);printf("\n");
-    shiftBits(b1, 30);
+    setAllBits(b1);
     showBits(b1);printf("\n");
 	return 0;
 }

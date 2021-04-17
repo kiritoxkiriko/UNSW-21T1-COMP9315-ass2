@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "hash.h"
 
 void fatal(char *msg, char *usage)
 {

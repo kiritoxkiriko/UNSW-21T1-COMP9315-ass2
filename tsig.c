@@ -10,6 +10,10 @@
 #include "hash.h"
 #include "bits.h"
 
+// calculate corresponding PID
+PageID calPid(Reln r, Count nsigs){
+    return nsigs/ (PAGESIZE/tupSize(r));
+}
 
 // make a tuple signature for SIMC
 Bits codeword(char *attr_value, int m, int k) {
@@ -43,11 +47,6 @@ Bits codeword_c(char *attr_value, int m, int u, int k) {
 // m-bits with k 1-bits and m-k 0-bits with in u-bits long
 }
 
-// calculate corresponding PID
-PageID calPid(Reln r, Count nsigs){
-    return nsigs/ (PAGESIZE/tupSize(r));
-}
-
 Bits makeTupleSig(Reln r, Tuple t) {
     assert(r != NULL && t != NULL);
     //TODO
@@ -59,7 +58,7 @@ Bits makeTupleSig(Reln r, Tuple t) {
             cw = newBits(tsigBits(r));
             int u = tsigBits(r) / nAttrs(r);
             int first = u+ tsigBits(r) % nAttrs(r);
-            int k = u / 2;
+            int k = (u / 2) ? (u / 2) : 1;
             for (int i = 0; i < nAttrs(r); ++i) {
                 if (strcmp(attr[i],"?") || strcmp(attr[i],"\0")) // ignore the ? attr
                     continue;
@@ -78,7 +77,7 @@ Bits makeTupleSig(Reln r, Tuple t) {
             for (int i = 0; i < nAttrs(r); ++i) {
                 if (strcmp(attr[i],"?") || strcmp(attr[i],"\0")) // ignore the ? attr
                     continue;
-                temp = codeword(attr[i], codeBits(r), tsigBits(r));
+                temp = codeword(attr[i], tsigBits(r),codeBits(r));
                 orBits(cw, temp);
                 freeBits(temp); // release memory
             }
@@ -97,6 +96,7 @@ void findPagesUsingTupSigs(Query q) {
     //TODO
 
     Bits querySig = makeTupleSig(q->rel,q->qstring);
+    unsetAllBits(q->pages);
     for (PageID i = 0; i < nTsigPages(q->rel); ++i) {
         Page p = getPage(q->rel->tsigf,i);
         for (Offset j = 0; j < pageNitems(p); ++j) {
@@ -108,10 +108,11 @@ void findPagesUsingTupSigs(Query q) {
                 PageID pid = calPid(q->rel,q->nsigs);
                 setBit(q->pages, pid);
             }
-            freeBits(tsig);
             q->nsigs++;
+            freeBits(tsig);
         }
         q->nsigpages++;
+        free(p);
     }
     // The printf below is primarily for debugging
     // Remove it before submitting this function

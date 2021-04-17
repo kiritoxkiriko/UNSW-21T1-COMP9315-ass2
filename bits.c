@@ -205,7 +205,7 @@ void shiftBits(Bits b, int n) {
 // get a bit-string (of length b->nbytes)
 // from specified position in Page buffer
 // and place it in a BitsRep structure
-
+// NOTE: position offset is in byte
 void getBits(Page p, Offset pos, Bits b) {
     //TODO
     Byte *start = addrInPage(p, pos, 1);
@@ -214,7 +214,7 @@ void getBits(Page p, Offset pos, Bits b) {
 
 // copy the bit-string array in a BitsRep
 // structure to specified position in Page buffer
-
+// NOTE: position offset is in byte
 void putBits(Page p, Offset pos, Bits b) {
     //TODO
     Byte *start = addrInPage(p, pos, 1);
