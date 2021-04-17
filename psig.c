@@ -90,6 +90,7 @@ void findPagesUsingPageSigs(Query q) {
     //TODO
     Bits querySig = makePageSig(q->rel, q->qstring);
     unsetAllBits(q->pages);
+    PageID pid = 0;
     for (PageID i = 0; i < nPsigPages(q->rel); ++i) {
         Page p = getPage(q->rel->psigf, i);
         for (Offset j = 0; j < pageNitems(p); ++j) {
@@ -98,7 +99,7 @@ void findPagesUsingPageSigs(Query q) {
             getBits(p, j * (psigBits(q->rel) / 8), psig);
             // check if sig match
             if (isSubset(querySig, psig)) {
-                PageID pid = q->nsigs;
+                pid = q->nsigs;
                 setBit(q->pages, pid);
             }
             q->nsigs++;
@@ -107,8 +108,8 @@ void findPagesUsingPageSigs(Query q) {
         q->nsigpages++;
         free(p);
     }
-    printf("Matched Pages:");
-    showBits(q->pages);
-    putchar('\n');
+//    printf("Matched Pages:");
+//    showBits(q->pages);
+//    putchar('\n');
 }
 

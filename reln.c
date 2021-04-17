@@ -82,6 +82,27 @@ Status newRelation(char *name, Count nattrs, float pF, char sigtype,
     // Create a file containing "pm" all-zeroes bit-strings,
     // each of which has length "bm" bits
     //TODO
+
+    PageID pid = p->bsigNpages - 1;
+    Page page = getPage(r->bsigf, pid);;
+    for (p->nbsigs = 0; p->nbsigs < p->pm; ++p->nbsigs) {
+        // check if room on last page; if not add new page
+        if (pageNitems(page) == p->bsigPP) {
+            putPage(r->bsigf, pid, page);
+            addPage(r->bsigf);
+            p->bsigNpages++;
+            pid++;
+            free(page);
+            page = newPage();
+            if (p == NULL) return NO_PAGE;
+        }
+        Bits bs = newBits(p->bm);
+        putBits(page, (p->bm / 8) * pageNitems(page), bs);
+        addOneItem(page);
+        freeBits(bs);
+    }
+    putPage(r->bsigf, pid, page);
+
     closeRelation(r);
     return 0;
 }
@@ -145,7 +166,6 @@ PageID addToRelation(Reln r, Tuple t) {
     PageID bsigPid;
     Offset offset;
     Bits temp = NULL;
-    bsigPid = 0;
 
     Bool newDataPage = FALSE;
     RelnParams *rp = &(r->params);
@@ -220,10 +240,10 @@ PageID addToRelation(Reln r, Tuple t) {
         addOneItem(p);
         rp->npsigs++;  //written to disk in closeRelation()
         putPage(r->psigf, psigPid, p);
-    } else{ // if not add new page, then update original psig
+    } else { // if not add new page, then update original psig
         // find pid and offset in page
-        psigPid = (rp->npages - 1) / rp->psigPP;
-        offset = (rp->npages - 1) % rp->psigPP;
+        psigPid = pid / rp->psigPP;
+        offset = pid % rp->psigPP;
         p = getPage(r->psigf, psigPid);
         temp = newBits(psigBits(r));
         getBits(p, (psigBits(r) / 8) * offset, temp);
@@ -232,11 +252,29 @@ PageID addToRelation(Reln r, Tuple t) {
         putPage(r->psigf, psigPid, p);
         freeBits(temp);
     }
-    freeBits(psig);
 
     // use page signature to update bit-slices
 
     //TODO
+
+    // can be optimise, doesn't have to read bm bits, only read nPages bits
+    // since we won't increase nPages in this insertion anymore
+
+    //temp = newBits(bsigBits(r));
+    temp = newBits(nPages(r));
+    for (int i = 0; i < psigBits(r); ++i) {
+        if (bitIsSet(psig, i)) {
+            bsigPid = i / maxBsigsPP(r);
+            offset = i % maxBsigsPP(r);
+            p = getPage(r->bsigf, bsigPid);
+            getBits(p, offset * (bsigBits(r) / 8), temp);
+            setBit(temp, pid);
+            putBits(p, offset * (bsigBits(r) / 8), temp);
+            putPage(r->bsigf, bsigPid, p);
+        }
+    }
+    freeBits(temp);
+    freeBits(psig);
 
     return nPages(r) - 1;
 }
